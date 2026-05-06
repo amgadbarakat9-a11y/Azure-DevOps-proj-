@@ -47,7 +47,7 @@ jobs:
           az storage blob lease break \
             --account-name sate22 \
             --container-name state \
-            --blob-name state/terraform.tfstate \
+            --blob-name terraform.tfstate \
             --account-key $STORAGE_KEY || true
 
           LOCK_ID=$(terraform plan -var-file="prod.tfvars" 2>&1 \
