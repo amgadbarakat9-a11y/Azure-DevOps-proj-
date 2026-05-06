@@ -36,6 +36,17 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Force Unlock Any Stale Lock  
+        run: |
+          LOCK_ID=$(terraform providers lock 2>&1 | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+          if terraform plan -var-file="prod.tfvars" 2>&1 | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' > /tmp/lock_id; then
+            echo "No lock found"
+          else
+            LOCK_ID=$(cat /tmp/lock_id)
+            [ -n "$LOCK_ID" ] && terraform force-unlock -force $LOCK_ID && echo
+          fi
+        continue-on-error: true
+
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
         run: terraform plan -var-file="prod.tfvars"
@@ -43,14 +54,3 @@ jobs:
       - name: Terraform Apply
         if: ${{ inputs.action == 'apply' }}
         run: terraform apply -var-file="prod.tfvars" -auto-approve
-
-      - name: Force Unlock on Failure  # ← ده الجديد
-        if: failure()
-        run: |
-          LOCK_ID=$(terraform force-unlock -force 2>&1 | grep -oP '[0-9a-f-]{36}' | head -1)
-          if [ -n "$LOCK_ID" ]; then
-            terraform force-unlock -force $LOCK_ID
-            echo "✅ Lock $LOCK_ID removed"
-          else
-            echo "⚠️ No lock found"
-          fi
