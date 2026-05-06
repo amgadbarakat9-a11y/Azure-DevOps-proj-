@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -38,11 +39,28 @@ jobs:
 
       - name: Break Any Existing Lock
         run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sate22 \
+            --resource-group statte \
+            --query '[0].value' -o tsv)
+
           az storage blob lease break \
             --account-name sate22 \
             --container-name state \
             --blob-name state/terraform.tfstate \
-            --auth-mode login || true
+            --account-key $STORAGE_KEY || true
+
+          LOCK_ID=$(terraform plan -var-file="prod.tfvars" 2>&1 \
+            | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' \
+            | head -1)
+
+          if [ -n "$LOCK_ID" ]; then
+            terraform force-unlock -force $LOCK_ID
+            echo "✅ Unlocked $LOCK_ID"
+          else
+            echo "✅ No stale lock found"
+          fi
+        continue-on-error: true
 
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
