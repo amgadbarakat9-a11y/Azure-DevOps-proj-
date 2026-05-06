@@ -36,16 +36,13 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Force Unlock Any Stale Lock  
+      - name: Break Any Existing Lock
         run: |
-          LOCK_ID=$(terraform providers lock 2>&1 | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
-          if terraform plan -var-file="prod.tfvars" 2>&1 | grep -oP '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' > /tmp/lock_id; then
-            echo "No lock found"
-          else
-            LOCK_ID=$(cat /tmp/lock_id)
-            [ -n "$LOCK_ID" ] && terraform force-unlock -force $LOCK_ID && echo
-          fi
-        continue-on-error: true
+          az storage blob lease break \
+            --account-name sate22 \
+            --container-name state \
+            --blob-name state/terraform.tfstate \
+            --auth-mode login || true
 
       - name: Terraform Plan
         if: ${{ inputs.action == 'plan' }}
