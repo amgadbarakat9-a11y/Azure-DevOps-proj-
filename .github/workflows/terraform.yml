@@ -8,37 +8,49 @@ on:
         required: true
         default: "plan"
 
+concurrency:
+  group: terraform-prod
+  cancel-in-progress: false
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
       TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: |
-          {
-            
-            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-            "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-          }
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
 
-    - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Terraform Init
+        run: terraform init
 
-   
-    - name: Terraform Plan
-      if: ${{ inputs.action == 'plan' }}
-      run: terraform plan -var-file="prod.tfvars"
+      - name: Terraform Plan
+        if: ${{ inputs.action == 'plan' }}
+        run: terraform plan -var-file="prod.tfvars"
 
-    - name: Terraform Apply
-      if: ${{ inputs.action == 'apply' }}
-      run: terraform apply -var-file="prod.tfvars"
+      - name: Terraform Apply
+        if: ${{ inputs.action == 'apply' }}
+        run: terraform apply -var-file="prod.tfvars" -auto-approve
+
+      - name: Force Unlock on Failure  # ← ده الجديد
+        if: failure()
+        run: |
+          LOCK_ID=$(terraform force-unlock -force 2>&1 | grep -oP '[0-9a-f-]{36}' | head -1)
+          if [ -n "$LOCK_ID" ]; then
+            terraform force-unlock -force $LOCK_ID
+            echo "✅ Lock $LOCK_ID removed"
+          else
+            echo "⚠️ No lock found"
+          fi
