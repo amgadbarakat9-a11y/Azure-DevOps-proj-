@@ -25,6 +25,6 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd Azure-DevOps-proj-/app
-            git pull
+            git pull https://github.com/${{ github.repository }}.git main
             docker compose up -d --build
-            '
+            
