@@ -17,13 +17,14 @@ jobs:
       - name: Deploy to Private VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PUBLIC_VM_IP }}
+          host: 10.0.2.4
           username: amgad
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-
+          proxy_host: ${{ secrets.PUBLIC_VM_IP }}
+          proxy_username: amgad
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            ssh -A amgad@10.0.2.4 '
-              cd Azure-DevOps-proj-/app &&
-              git pull &&
-              docker compose up -d --build
+            cd Azure-DevOps-proj-/app
+            git pull
+            docker compose up -d --build
             '
