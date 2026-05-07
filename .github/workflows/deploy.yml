@@ -22,5 +22,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
 
           script: |
-           echo "connected successfully"
-           hostname
+            ssh -A amgad@10.0.2.4 '
+              cd Azure-DevOps-proj-/app &&
+              git pull &&
+              docker compose up -d --build
+            '
