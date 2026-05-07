@@ -19,7 +19,7 @@ jobs:
         with:
           host: ${{ secrets.PUBLIC_VM_IP }}
           username: amgad
-          key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
 
           script: |
             ssh -A amgad@10.0.2.4 '
