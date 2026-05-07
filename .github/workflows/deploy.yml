@@ -9,46 +9,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      TF_VAR_public_key: ${{ secrets.TF_VAR_public_key }}
-      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
     steps:
 
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Get Public VM IP
-        run: |
-          echo "PUBLIC_IP=$(terraform output -raw bastion_public_ip)" >> $GITHUB_ENV
-
       - name: Deploy to Private VM
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.PUBLIC_IP }}
+          host: ${{ secrets.PUBLIC_VM_IP }}
           username: amgad
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.TF_VAR_PUBLIC_KEY }}
 
           script: |
             ssh -A amgad@10.0.2.4 '
-              cd Azure-DevOps-clean/app &&
+              cd Azure-DevOps-proj-/app &&
               git pull &&
               docker compose up -d --build
             '
