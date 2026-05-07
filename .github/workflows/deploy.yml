@@ -33,11 +33,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        working-directory: terraform
         run: terraform init
 
       - name: Get Public VM IP
-        working-directory: terraform
         run: |
           echo "PUBLIC_IP=$(terraform output -raw bastion_public_ip)" >> $GITHUB_ENV
 
