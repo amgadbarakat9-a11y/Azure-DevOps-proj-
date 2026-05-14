@@ -9,22 +9,54 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
 
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy to Private VM
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/amgadbarakat9-a11y/app:latest ./app
+
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/amgadbarakat9-a11y/app:latest
+
+      - name: Deploy to VM1
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 10.0.2.4
+          host: ${{ secrets.PUBLIC_VM_IP }}
           username: amgad
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ secrets.PUBLIC_VM_IP }}
-          proxy_username: amgad
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
           script: |
-            cd Azure-DevOps-proj-/app
-            git pull https://github.com/${{ github.repository }}.git main
-            docker compose up -d --build
-            
+            ssh -o StrictHostKeyChecking=no amgad@10.0.2.4 '
+              docker pull ghcr.io/amgadbarakat9-a11y/app:latest &&
+              cd Azure-DevOps-proj-/app &&
+              docker compose up -d
+            '
+
+      - name: Deploy to VM2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PUBLIC_VM_IP }}
+          username: amgad
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+          script: |
+            ssh -o StrictHostKeyChecking=no amgad@10.0.3.4 '
+              docker pull ghcr.io/amgadbarakat9-a11y/app:latest &&
+              cd Azure-DevOps-proj-/app &&
+              docker compose up -d
+            '
