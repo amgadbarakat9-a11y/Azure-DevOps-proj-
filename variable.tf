@@ -20,3 +20,4 @@ variable "subnet3_prefix" {}
 variable "subnet4_prefix" {}
 
 variable "public_key" {}
+
