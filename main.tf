@@ -11,6 +11,14 @@ module "Network" {
 
   subnet2_name   = var.subnet2_name
   subnet2_prefix = var.subnet2_prefix
+
+  subnet3_name   = var.subnet3_name
+  subnet3_prefix = var.subnet3_prefix
+
+  subnet4_prefix = var.subnet4_prefix
+
+  
+
 }
 
 module "compute" {
@@ -24,8 +32,22 @@ module "compute" {
   public_key     = var.public_key
 
   bastion_subnet_id = module.Network.bastion_subnet_id
-  app_subnet_id     = module.Network.app_subnet_id
+  app_subnet1_id     = module.Network.app_subnet1_id
+  app_subnet2_id     = module.Network.app_subnet2_id
+
+  backend_pool_id = module.Network.backend_pool_id
 
 
+}
 
+module "Database" {
+  source              = "./database"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  db_subnet_id = module.Network.subnet4_id
+  vnet_id      = module.Network.vnet_id
+
+  depends_on = [
+    module.Network
+  ]
 }

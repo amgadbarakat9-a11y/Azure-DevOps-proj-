@@ -28,10 +28,18 @@ variable "bastion_subnet_id" {
   type        = string
 }
 
-variable "app_subnet_id" {
+variable "app_subnet1_id" {
   description = "Subnet ID for app VM"
   type        = string
 }
 
+variable "app_subnet2_id" {
+  description = "Subnet ID for app VM"
+  type        = string
+}
+
+variable "backend_pool_id" {
+  type = string
+}
 
 

@@ -37,3 +37,18 @@ variable "subnet2_prefix" {
   description = "App subnet CIDR"
   type        = list(string)
 }
+
+variable "subnet3_name" {
+  description = "App subnet name"
+  type        = string
+}
+
+variable "subnet3_prefix" {
+  description = "App subnet CIDR"
+  type        = list(string)
+}
+
+variable "subnet4_prefix" {
+  description = "App subnet CIDR"
+  type        = list(string)
+}

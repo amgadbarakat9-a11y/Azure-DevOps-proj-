@@ -14,4 +14,9 @@ variable "subnet1_prefix" {}
 variable "subnet2_name" {}
 variable "subnet2_prefix" {}
 
+variable "subnet3_name" {}
+variable "subnet3_prefix" {}
+
+variable "subnet4_prefix" {}
+
 variable "public_key" {}

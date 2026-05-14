@@ -13,6 +13,17 @@ name = "${var.vnet_name}-nsg1"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+  security_rule {
+    name                       = "allow-Http"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
 
   tags = {
     name = "nsg-ssh"
@@ -33,9 +44,21 @@ name = "${var.vnet_name}-nsg2"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "3000"
-    source_address_prefix      = var.subnet1_prefix[0]
+    source_address_prefix      = "*"
     destination_address_prefix = "VirtualNetwork"
   }
+
+  security_rule {
+  name                       = "allow-lb"
+  priority                   = 103
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "3000"
+  source_address_prefix      = "AzureLoadBalancer"
+  destination_address_prefix = "VirtualNetwork"
+}
 
    security_rule {
     name                       = "allow-app-ssh"
@@ -67,5 +90,10 @@ resource "azurerm_subnet_network_security_group_association" "snsg1" {
 
 resource "azurerm_subnet_network_security_group_association" "snsg2" {
   subnet_id                 = azurerm_subnet.sub2.id
+  network_security_group_id = azurerm_network_security_group.nsg2.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "snsg3" {
+  subnet_id                 = azurerm_subnet.sub3.id
   network_security_group_id = azurerm_network_security_group.nsg2.id
 }
